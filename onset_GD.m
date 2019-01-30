@@ -59,32 +59,34 @@ for indexA = 1:length(downsampling_rate)
                     filename = listing(ii).name;
                     orig_filename = filename;
                     cd test_here;
-                    [Y,Fs]=wavread(filename);
+                    [Y,Fs] = audioread(orig_filename);%change wavread to audioread
                     cd ..;    
 
                     DF=diff(Y);   % Differentiate it to emphasize the frequency components in amplitude
                     fprintf('Working on %s\n',filename);
                     a = hilbert(DF);
-                    Z=abs(a+DF);
-                    D = downsample(Z,downsampling_rate(indexA));
-                    S = smooth(D,smoothening_factor(indexB),'moving'); 
-                    assignin('base','S',S);
-                    assignin('base','Y',Y);
+                    Z = abs(a+DF);
+                    D = downsample(Z,downsampling_rate(indexA));%reduce calculations
+                    S = smooth(D,smoothening_factor(indexB),'moving');%yy = smooth(y) smooths the data in the column vector y using a moving average filter. Results are returned in the column vector yy. The default span for the moving average is 5.
+                        %yy = smooth(y,span,method) sets the span of method to span. For the loess and lowess methods, span is a percentage of the total number of data points, less than or equal to 1 
+                    assignin('base','S',S);% assignin(ws, 'var', val) assigns the value val to the variable var in the workspace ws
+                    assignin('base','Y',Y);%ws can have a value of 'base' or 'caller' to denote the MATLAB base workspace or the workspace of the caller function.
                     grp_delay = ones(length(S),1);
                     gd_sum = ones(length(S),1);
-
-                    parfor wsfIndex = 1:length(winScaleFactor)
+                    
+                    for wsfIndex = 1:length(winScaleFactor)%pode tirar o par, vale a pena?
                         
                         tempDir = sprintf('temp_%d',wsfIndex);
-                        mkdir(tempDir); cd(tempDir);
+                        mkdir(tempDir); 
+                        cd(tempDir);
                         energy_file_name = strcat(filename(1:end-4),'.en');
-                        dlmwrite(energy_file_name,S*1000,'\n');
-                        spec_file_name = energy_file_name(1:end-2);
-                        spec_file_name =strcat(spec_file_name,'spec');
-                        % Invoking the binary                        
+                        dlmwrite(energy_file_name,S*1000,'\n');%Write matrix S*1000 to 'energy...' file, delimited by the '\n' character
+                        spec_file_name = strcat(energy_file_name(1:end-2),'spec');
+                        copyfile(energy_file_name,spec_file_name);% assim foi criado o arquivo spec
+                        % Invoking the binary - ele so copiou o config file para um temp, cade o binario?                       
                         copyfile('../fe-words.base_ref','fe-words.base');
                         ctrl_file = 'fe-words.base';
-                        temp_ctrl_file = strcat('temp.base');
+                        temp_ctrl_file = strcat('temp.base');% NAO HOUVE CONCATENACAO, PQ DO USO?
                         % Changing the winscalefactor parameter in config file
                         a = importdata(ctrl_file);
                         a = struct2cell(a);
@@ -109,8 +111,8 @@ for indexA = 1:length(downsampling_rate)
                         delete(energy_file_name);
                         temp = load(spec_file_name);
                         delete(spec_file_name);
-                        temp = temp(:,5);
-                        temp(length(S)+1:end) = [];
+                        temp = temp(:,1);%change 5 to 1
+                        temp(length(S)+1:end) = [];%essa linha
                         grp_delay = grp_delay.*temp;
                         temp = temp - mean(temp);
                         gd_sum = gd_sum + cumsum(temp);
@@ -201,7 +203,7 @@ for indexA = 1:length(downsampling_rate)
                     % Printing in standard MLF format
                     dangerflag = 0;
                     cd test_here;
-                    [ X, Fs] = wavread(orig_filename);
+                    [X,Fs] = audioread(filename);
                     cd ..;
                     fid3 = fopen(Mlf_file,'a');
                     length_wav_file = length(X)*1/Fs;
