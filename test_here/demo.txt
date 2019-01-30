@@ -1,1 +1,0 @@
-Place the wav file in this folder
