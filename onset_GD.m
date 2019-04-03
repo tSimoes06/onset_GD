@@ -27,31 +27,33 @@ clear all;
 close all;
 clc;
 
-Mlf_file = 'result_1.mlf';
+%txt_file = 'result_1.txt';
 
 warning('off','all');
 warning;
 
 % Parameter definitions
-downsampling_rate = 10:2:10;
+downsampling_rate = 10;
 smoothening_factor = 44:2:44;    
 winScaleFactor = 30:5:30;
 
-thres = 0.2:0.02:0.2;
+thres = 0.005;
 
 cd test_here; %place the test files here
 listing = dir(pwd);
 cd ..;
 
-
+file_names = struct('INST',{'AG','agogo','CX','caixa','CU','cuica','PD','pandeiro','RR','reco_reco','RP','repique','SK','shaker','SU','surdo','TB','tamborim','TT','tanta'});
 % Begin of paramterization
+result = [];
 
 for indexA = 1:length(downsampling_rate)
     for indexB = 1:length(smoothening_factor)
             for indexD = 1:length(thres)
                 fprintf('Paramterization details : dwnsmpl_rate = %d\n smth_factor = %d, thres = %f\n',downsampling_rate(indexA),smoothening_factor(indexB),thres(indexD));
-                fid3 = fopen(Mlf_file,'w');
-                fprintf(fid3,'#!MLF!#\n');
+                %fid3 = fopen(mat_file,'w');
+                %fprintf(fid3,'#!MLF!#\n');
+                
                 for ii = 3:1:length(listing)
 
                     %======================================================================
@@ -61,24 +63,25 @@ for indexA = 1:length(downsampling_rate)
                     cd test_here;
                     [Y,Fs] = audioread(orig_filename);%change wavread to audioread
                     % Plot the signal in time domain
-                    dt = 1/Fs;
-                    t = 0:dt:(length(Y)*dt)-dt;
-                    plot(t,Y,'r');
-                    legend('Agogo signal');
-                    xlabel('seconds');
-                    ylabel('Amplitude');
+                    %dt = 1/Fs;
+                    %t = 0:dt:(length(Y)*dt)-dt;
+                    %plot(t,Y,'r');
+                    %legend('Agogo signal');
+                    %xlabel('seconds');
+                    %ylabel('Amplitude');
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     
                     cd ..;    
+                    %already_write = false;
                     DF=diff(Y);   % Differentiate it to emphasize the frequency components in amplitude
                     
-                    % Plot diff signal in time domain
-                    figure;
-                    t1 = 0:dt:(length(DF)*dt)-dt;
-                    plot(t1,DF,'r');
-                    legend('Derivative of Music signal');
-                    xlabel('seconds');
-                    ylabel('Amplitude');
+                    %Plot diff signal in time domain
+                    %figure;
+                    %t1 = 0:dt:(length(DF)*dt)-dt;
+                    %plot(t1,DF,'r');
+                    %legend('Derivative of Music signal');
+                    %xlabel('seconds');
+                    %ylabel('Amplitude');
                     fprintf('Working on %s\n',filename);
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     a = hilbert(DF);
@@ -87,21 +90,21 @@ for indexA = 1:length(downsampling_rate)
                     S = smooth(D,smoothening_factor(indexB),'moving');%yy = smooth(y) smooths the data in the column vector y using a moving average filter. Results are returned in the column vector yy. The default span for the moving average is 5.
                         %yy = smooth(y,span,method) sets the span of method to span. For the loess and lowess methods, span is a percentage of the total number of data points, less than or equal to 1 
                     % Plot the envelope estimated using Hilbert transform
-                    figure;
-                    t2 = 0:dt:(length(S)*dt)-dt;
-                    plot(t2,S,'r');
-                    legend('Envelope of Music signal');
-                    xlabel('seconds');
-                    ylabel('Amplitude');
+                    %figure;
+                    %t2 = 0:dt:(length(S)*dt)-dt;
+                    %plot(t2,S,'r');
+                    %legend('Envelope of Music signal');
+                    %xlabel('seconds');
+                    %ylabel('Amplitude');
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                    
-                    X = ifft(S.^2);%this line was missing
+                    %X = ifft(S.^2);% It's not necessary i think
                     
                     fprintf('Working on %s\n',filename);
-                    assignin('base','X',X);% assignin(ws, 'var', val) assigns the value val to the variable var in the workspace ws
+                    assignin('base','S',S);% assignin(ws, 'var', val) assigns the value val to the variable var in the workspace ws
                     assignin('base','Y',Y);%ws can have a value of 'base' or 'caller' to denote the MATLAB base workspace or the workspace of the caller function.
-                    grp_delay = ones(length(X),1);
-                    gd_sum = ones(length(X),1);
+                    grp_delay = ones(length(S),1);
+                    gd_sum = ones(length(S),1);
                     
                     for wsfIndex = 1:length(winScaleFactor)%pode tirar o par, vale a pena?
                         
@@ -151,22 +154,22 @@ for indexA = 1:length(downsampling_rate)
                     
                     
                     grp_delay = -diff(gd_sum);%missing '-'
-                    figure;
-                    t3 = 0:dt:(length(grp_delay)*dt)-dt;
-                    plot(t3,-grp_delay,'r');
-                    legend('Minimum phase group delay computed on the envelope');
-                    xlabel('seconds');
-                    ylabel('Amplitude');
+                    %figure;
+                    %t3 = 0:dt:(length(grp_delay)*dt)-dt;
+                    %plot(t3,-grp_delay,'r');
+                    %legend('Minimum phase group delay computed on the envelope');
+                    %xlabel('seconds');
+                    %ylabel('Amplitude');
                     
                     grp_delay = smooth(grp_delay,2*smoothening_factor(indexB),'moving');   % A moving average with 1 ms interval
                     
                     grp_delay = grp_delay/max(grp_delay);
-                    figure;
-                    t4 = 0:dt:(length(grp_delay)*dt)-dt;
-                    plot(t4,-grp_delay,'r');
-                    legend('Minimum phase group delay computed on the envelope smoothed');
-                    xlabel('seconds');
-                    ylabel('Amplitude');
+                    %figure;
+                    %t4 = 0:dt:(length(grp_delay)*dt)-dt;
+                    %plot(t4,-grp_delay,'r');
+                    %legend('Minimum phase group delay computed on the envelope smoothed');
+                    %xlabel('seconds');
+                    %ylabel('Amplitude');
                     %======================================================================
 
 
@@ -227,14 +230,14 @@ for indexA = 1:length(downsampling_rate)
                      peak_valley_heights = ymax - ymin;
 
                      for index = 1:1:length(peak_valley_heights)
-                         if (peak_valley_heights(index) > threshold)
+                         if (peak_valley_heights(index) > threshold)%para resolver o problema do tanta e tamborim so diminuir esse limite?
                      %         fprintf('Interest point at %d\n',ceil((imin(index) + imax(index))/2)); 
                              stroke_loc(index_stroke) = ceil((imin(index) + imax(index))/2);
                              index_stroke = index_stroke + 1;
                          end
                      end
                      %==================================================================
-                    stroke_loc(stroke_loc==0) = [];
+                    stroke_loc(stroke_loc==0) = [];% substitute the zeros for an empty list
 
                     assignin('base','stroke_loc',stroke_loc);
                     assignin('base','peaks',peaks);
@@ -249,7 +252,7 @@ for indexA = 1:length(downsampling_rate)
                     cd test_here;
                     [X,Fs] = audioread(filename);
                     cd ..;
-                    fid3 = fopen(Mlf_file,'a');
+                    fid3 = fopen('result_1.txt','a');
                     length_wav_file = length(X)*1/Fs;
                     stroke_loc = stroke_loc*downsampling_rate(indexA)/Fs;  % Converting into seconds
                     if (isempty(stroke_loc))        % Provision for null strokes
@@ -267,22 +270,44 @@ for indexA = 1:length(downsampling_rate)
                         if (dangerflag~=1)
                             clear X;
                             filename = filename(1:end-4);
+                            part_filename = filename(11:12);% to identify the instrument and save in the correct file
                             assignin('base','filename',filename);
                             assignin('base','stroke_loc',stroke_loc);
-                            fprintf(fid3,'\"*/%s.lab\"\n0\t%f\n',filename,stroke_loc(1));
+                            %fprintf(fid3,'\"*/%s.lab\"\n',filename);
                             index3 = 1;
-                            while (index3 < length(stroke_loc) )
-                                fprintf(fid3,'%f\t%f\n',stroke_loc(index3),stroke_loc(index3 + 1));
+                            while (index3 <= length(stroke_loc) )
+                                %fprintf(fid3,'%f\n',stroke_loc(index3));
+                                result{ii}(index3) = stroke_loc(index3);
+                                
                                 index3 = index3 + 1;
                             end
-                            fprintf(fid3,'%f\t%f\n',stroke_loc(index3),length_wav_file-0.0100000);  % Forcing 10ms for silence at the end
-                            fprintf(fid3,'%f\t%f\n',length_wav_file-0.0100000,length_wav_file);  
+                            result{ii} = transpose(result{ii});
                         end
                     end
                     fclose(fid3);
-
+                    %find = false;
+                    %count = 1;
+                    %cd result;
+                    
+                    %while ~find && count <=20
+                        
+                    %    if file_names(count).INST == part_filename
+                    %        x = sprintf('%s.mat',file_names(count+1).INST);
+                    %        find = true;
+                    %    end
+                    %    count = count + 2;
+                    %end
+                    
+                    %if ~already_write
+                    %    save(x,'data_current_intrument');
+                    %    already_write = true;
+                    %else
+                    %    save(x,'data_current_intrument','-append');
+                    %end
+                    %cd ..;    
                     %====================================================================== 
                 end
+                
                 
             end
     end
