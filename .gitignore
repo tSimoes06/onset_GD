@@ -1,2 +1,16 @@
-test_here/agogo167.wav
-test_here/agogo167_6seconds.wav
+#arquivos matlab
+g_t_database.mat
+results_songs_database.mat
+precision_recall.m
+ground_truth/
+result/
+amdet_ver7_sr.m
+#Arquivos txt
+result_1.txt
+steps_to_precision_recall.txt
+#Arquivos .wav
+\test_here
+#copy of onset_gd
+onset_GD.asv
+#Other formats
+result_1.mlf
