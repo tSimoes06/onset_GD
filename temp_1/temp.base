@@ -2,7 +2,7 @@ windowSize int 400.000000
 waveType int 6.000000
 winScaleFactor float 30.000000
 gamma float 0.100000
-fftOrder int 1.000000
+fftOrder int 0.000000
 fftSize int 0.000000
 frameAdvanceSamples int 1.000000
 medianOrder int 5.000000
