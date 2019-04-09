@@ -5,6 +5,8 @@ precision_recall.m
 ground_truth/
 result/
 amdet_ver7_sr.m
+precision_recall_tamborim.mat
+result.mat
 #Arquivos txt
 result_1.txt
 steps_to_precision_recall.txt
@@ -15,3 +17,4 @@ steps_to_precision_recall.txt
 onset_GD.asv
 #Other formats
 result_1.mlf
+\temp_1
