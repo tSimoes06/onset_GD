@@ -10,6 +10,7 @@ result_1.txt
 steps_to_precision_recall.txt
 #Arquivos .wav
 \test_here
+\test_here_gt
 #copy of onset_gd
 onset_GD.asv
 #Other formats
