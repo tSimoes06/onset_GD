@@ -34,8 +34,8 @@ warning;
 
 % Parameter definitions
 downsampling_rate = 10;
-smoothening_factor = 44:2:44;    
-winScaleFactor = 30:5:30;
+smoothening_factor = 44;    
+winScaleFactor = 30;
 
 thres = 0.005;
 
@@ -43,9 +43,13 @@ cd test_here; %place the test files here
 listing = dir(pwd);
 cd ..;
 
-file_names = struct('INST',{'AG','agogo','CX','caixa','CU','cuica','PD','pandeiro','RR','reco_reco','RP','repique','SK','shaker','SU','surdo','TB','tamborim','TT','tanta'});
+gt_name = {};
+gt_strokes = [];
+names = {};
+strokes = [];
+gt = dir('./test_here_gt/');
 % Begin of paramterization
-result = [];
+
 
 for indexA = 1:length(downsampling_rate)
     for indexB = 1:length(smoothening_factor)
@@ -55,11 +59,11 @@ for indexA = 1:length(downsampling_rate)
                 %fprintf(fid3,'#!MLF!#\n');
                 
                 for ii = 3:1:length(listing)
-
                     %======================================================================
                     % Part1: Using Amplitude Demodulation, and applying Group delay on it
                     filename = listing(ii).name;
                     orig_filename = filename;
+                    names{ii-2} = orig_filename;
                     cd test_here;
                     [Y,Fs] = audioread(orig_filename);%change wavread to audioread
                     % Plot the signal in time domain
@@ -270,45 +274,44 @@ for indexA = 1:length(downsampling_rate)
                         if (dangerflag~=1)
                             clear X;
                             filename = filename(1:end-4);
-                            part_filename = filename(11:12);% to identify the instrument and save in the correct file
                             assignin('base','filename',filename);
                             assignin('base','stroke_loc',stroke_loc);
                             %fprintf(fid3,'\"*/%s.lab\"\n',filename);
                             index3 = 1;
                             while (index3 <= length(stroke_loc) )
                                 %fprintf(fid3,'%f\n',stroke_loc(index3));
-                                result{ii}(index3) = stroke_loc(index3);
+                                strokes{ii-2}(index3) = stroke_loc(index3);%somehow  two extra slots appears in stroke's vector that are unexpected
                                 
                                 index3 = index3 + 1;
+                                
                             end
-                            result{ii} = transpose(result{ii});
+                            %strokes(ii-2) = transpose(strokes(ii-2));
                         end
                     end
                     fclose(fid3);
-                    %find = false;
-                    %count = 1;
-                    %cd result;
-                    
-                    %while ~find && count <=20
-                        
-                    %    if file_names(count).INST == part_filename
-                    %        x = sprintf('%s.mat',file_names(count+1).INST);
-                    %        find = true;
-                    %    end
-                    %    count = count + 2;
-                    %end
-                    
-                    %if ~already_write
-                    %    save(x,'data_current_intrument');
-                    %    already_write = true;
-                    %else
-                    %    save(x,'data_current_intrument','-append');
-                    %end
-                    %cd ..;    
-                    %====================================================================== 
+                    result = table(names,strokes);
+
                 end
+                % predefinitions to calculate precision and recall
+                cd test_here_gt;
+                for current_gt = 3:1:length(gt)
+                    gt_name{current_gt-2} = gt(current_gt).name;
+                    gt_file = importdata(gt(current_gt).name);
+                    gt_file = gt_file(:,1);%just the first column
+                    
+                    index4 = 1;
+                    while(index4 <= length(gt_file))
+                        gt_strokes{current_gt-2}(index4) = gt_file(index4);
+                        index4 = index4+1;
+                    end
+                      
+                end
+                cd ..;
+                ground_truth = table(gt_name,gt_strokes);
                 
                 
             end
     end
+    save result result;
+    save ground_truth ground_truth;
 end
