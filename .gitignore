@@ -10,6 +10,7 @@ result.mat
 #Arquivos txt
 result_1.txt
 steps_to_precision_recall.txt
+tamborim_result/
 #Arquivos .wav
 \test_here
 \test_here_gt
