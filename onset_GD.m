@@ -33,11 +33,11 @@ warning('off','all');
 warning;
 
 % Parameter definitions
-downsampling_rate = 10;
-smoothening_factor = 44;    
+downsampling_rate = 3; %4;3
+smoothening_factor = 77; %80;%44;    
 winScaleFactor = 30;
 
-thres = 0.005;
+thres = 0.2;%0.09;%0.05
 
 cd test_here; %place the test files here
 listing = dir(pwd);
@@ -61,15 +61,16 @@ for indexA = 1:length(downsampling_rate)
                 for ii = 3:1:length(listing)
                     %======================================================================
                     % Part1: Using Amplitude Demodulation, and applying Group delay on it
-                    filename = listing(ii).name;
+                    filename = listing(ii).name; 
                     orig_filename = filename;
                     names{ii-2} = orig_filename;
                     cd test_here;
-                    [Y,Fs] = audioread(orig_filename);%change wavread to audioread
+                    [signal,Fs] = audioread(orig_filename);%change wavread to audioread
+                    
                     % Plot the signal in time domain
                     %dt = 1/Fs;
-                    %t = 0:dt:(length(Y)*dt)-dt;
-                    %plot(t,Y,'r');
+                    %t = 0:dt:(length(Signal)*dt)-dt;
+                    %plot(t,Signal,'r');
                     %legend('Agogo signal');
                     %xlabel('seconds');
                     %ylabel('Amplitude');
@@ -77,7 +78,11 @@ for indexA = 1:length(downsampling_rate)
                     
                     cd ..;    
                     %already_write = false;
-                    DF=diff(Y);   % Differentiate it to emphasize the frequency components in amplitude
+                    
+                    %obtaining the normalized version of the signal
+                    %norma_signal = signal/bandpower(signal);
+                    
+                    DF=diff(signal);   % Differentiate it to emphasize the frequency components in amplitude
                     
                     %Plot diff signal in time domain
                     %figure;
@@ -86,16 +91,20 @@ for indexA = 1:length(downsampling_rate)
                     %legend('Derivative of Music signal');
                     %xlabel('seconds');
                     %ylabel('Amplitude');
-                    fprintf('Working on %s\n',filename);
+                    fprintf('Working on %s\n',orig_filename);
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    a = hilbert(DF);
-                    Z = abs(a+DF);
-                    D = downsample(Z,downsampling_rate(indexA));%reduce calculations
-                    S = smooth(D,smoothening_factor(indexB),'moving');%yy = smooth(y) smooths the data in the column vector y using a moving average filter. Results are returned in the column vector yy. The default span for the moving average is 5.
+                    analytic_signal = hilbert(DF);% Returns the analytic version of DF
+                    envelope = abs(analytic_signal);% Before it was like this:Z = abs(a+DF)
+                    down_envelope = downsample(envelope,downsampling_rate(indexA));%reduce calculations
+                    smooth_envelope = smooth(down_envelope,smoothening_factor(indexB),'moving');%yy = smooth(y) smooths the data in the column vector y using a moving average filter. Results are returned in the column vector yy. The default span for the moving average is 5.
                         %yy = smooth(y,span,method) sets the span of method to span. For the loess and lowess methods, span is a percentage of the total number of data points, less than or equal to 1 
+                    
+                    
+                    
+                    
                     % Plot the envelope estimated using Hilbert transform
                     %figure;
-                    %t2 = 0:dt:(length(S)*dt)-dt;
+                    %t2 = 0:dt:(length(Smooth_Envelope)*dt)-dt;
                     %plot(t2,S,'r');
                     %legend('Envelope of Music signal');
                     %xlabel('seconds');
@@ -104,11 +113,10 @@ for indexA = 1:length(downsampling_rate)
                    
                     %X = ifft(S.^2);% It's not necessary i think
                     
-                    fprintf('Working on %s\n',filename);
-                    assignin('base','S',S);% assignin(ws, 'var', val) assigns the value val to the variable var in the workspace ws
-                    assignin('base','Y',Y);%ws can have a value of 'base' or 'caller' to denote the MATLAB base workspace or the workspace of the caller function.
-                    grp_delay = ones(length(S),1);
-                    gd_sum = ones(length(S),1);
+                    assignin('base','smooth_envelope',smooth_envelope);% assignin(ws, 'var', val) assigns the value val to the variable var in the workspace ws
+                    assignin('base','signal',signal);%ws can have a value of 'base' or 'caller' to denote the MATLAB base workspace or the workspace of the caller function.
+                    grp_delay = ones(length(smooth_envelope),1);
+                    gd_sum = ones(length(smooth_envelope),1);
                     
                     for wsfIndex = 1:length(winScaleFactor)%pode tirar o par, vale a pena?
                         
@@ -116,14 +124,14 @@ for indexA = 1:length(downsampling_rate)
                         mkdir(tempDir); 
                         cd(tempDir);
                         energy_file_name = strcat(filename(1:end-4),'.en');
-                        dlmwrite(energy_file_name,S*1000,'\n');%Write matrix S*1000 to 'energy...' file, delimited by the '\n' character
+                        dlmwrite(energy_file_name,smooth_envelope*1000,'\n');%Write matrix S*1000 to 'energy...' file, delimited by the '\n' character
                         spec_file_name = strcat(energy_file_name(1:end-2),'spec');
                         copyfile(energy_file_name,spec_file_name);% assim foi criado o arquivo spec
                         % Invoking the binary - ele so copiou o config file para um temp, cade o binario?                       
                         copyfile('../fe-words.base_ref','fe-words.base');
                         ctrl_file = 'fe-words.base';
                         temp_ctrl_file = strcat('temp.base');% NAO HOUVE CONCATENACAO, PQ DO USO?
-                        % Changing the winscalefactor parameter in config file
+                        % Changing the winscalefactor parameter in log file
                         a = importdata(ctrl_file);
                         a = struct2cell(a);
                         a{1}(3) = winScaleFactor(wsfIndex);
@@ -149,7 +157,7 @@ for indexA = 1:length(downsampling_rate)
                         temp = load(spec_file_name);
                         delete(spec_file_name);
                         temp = temp(:,1);%change 5 to 1
-                        temp(length(S)+1:end) = [];%essa linha
+                        temp(length(smooth_envelope)+1:end) = [];%essa linha
                         grp_delay = grp_delay.*temp;
                         temp = temp - mean(temp);
                         gd_sum = gd_sum + cumsum(temp);
@@ -280,7 +288,7 @@ for indexA = 1:length(downsampling_rate)
                             index3 = 1;
                             while (index3 <= length(stroke_loc) )
                                 %fprintf(fid3,'%f\n',stroke_loc(index3));
-                                strokes{ii-2}(index3) = stroke_loc(index3);%somehow  two extra slots appears in stroke's vector that are unexpected
+                                strokes{ii-2}(index3) = stroke_loc(index3);%somehow  two extra slots appear in stroke's vector that are unexpected
                                 
                                 index3 = index3 + 1;
                                 
@@ -292,7 +300,8 @@ for indexA = 1:length(downsampling_rate)
                     result = table(names,strokes);
 
                 end
-                % predefinitions to calculate precision and recall
+                % predefinitions to calculate precision and recall,
+                % uncomment if you change the test_here_gt
                 cd test_here_gt;
                 for current_gt = 3:1:length(gt)
                     gt_name{current_gt-2} = gt(current_gt).name;

@@ -1,17 +1,17 @@
-function [precision, recall] = precisionRecall( ground_truth,result)
+function [precision, recall] = precisionRecall( ground_truth_strokes,result_strokes)
 % precisionRecall calculates precision and recall for the result_strokes of
-% one instrument
+% one instrument,
 
 true_positive = 0;
 false_positive = 0;
 false_negative = 0;
 
-total_of_tracks = length(result.strokes);
+total_of_tracks = length(result_strokes);
 
 for current_track = 1:total_of_tracks
     
-    size_GT_strokes = length(ground_truth.gt_strokes{current_track});
-    size_inst_strokes = length(result.strokes{current_track});
+    size_GT_strokes = length(ground_truth_strokes{current_track});
+    size_inst_strokes = length(result_strokes{current_track});
     
     for data = 1:size_GT_strokes
         
@@ -20,7 +20,7 @@ for current_track = 1:total_of_tracks
         
         while ~find && (data_count < size_inst_strokes)
             
-            if (abs(ground_truth.gt_strokes{current_track}(data)-result.strokes{current_track}(data_count))) <= 0.02
+            if (abs(ground_truth_strokes{current_track}(data)-result_strokes{current_track}(data_count))) <= 0.02
                 true_positive = true_positive +1;
                 find = true;
             end

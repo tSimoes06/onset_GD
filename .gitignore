@@ -1,4 +1,4 @@
-#arquivos matlab
+#matlab files
 g_t_database.mat
 results_songs_database.mat
 precision_recall.m
@@ -7,15 +7,17 @@ result/
 amdet_ver7_sr.m
 precision_recall_tamborim.mat
 result.mat
-#Arquivos txt
+ground_truth.mat
+#txt files
 result_1.txt
 steps_to_precision_recall.txt
 tamborim_result/
-#Arquivos .wav
-\test_here
-\test_here_gt
+
+#.wav files
+
 #copy of onset_gd
 onset_GD.asv
+
 #Other formats
 result_1.mlf
-\temp_1
+analyzes/
